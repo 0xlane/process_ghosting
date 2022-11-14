@@ -40,3 +40,11 @@ process_ghosting.exe <target_path> <payload_path>
 因为创建的进程属于无文件进程，在进程管理器里看着很怪异，暂时无法解决，不过单纯用来绕过静态进程文件扫描还是不错的。
 
 ![x](images/2022-10-28_16-06-08.png)
+
+这个问题已经解决，解决过程：
+
+简单看了一下 windows 进程管理器获取进程名并不是通过 PEB，而是在进程创建时根据 section_handle 信息确定的，由于在原项目中创建进程的时候文件已经被删除，无法获取到文件信息导致进程名为空了，解决方法很简单，就是在创建进程之后再关闭文件句柄，但是这样子就可以查出来进程对应的具体文件路径，所以这里还是留空吧。
+
+![x](images/2022-10-31_11-47-21.png)
+
+可能 hasherezade 也觉得不满意，又结合 ProcessHollowing 技术写了个项目 [hasherezade/transacted_hollowing](https://github.com/hasherezade/transacted_hollowing) 解决了这个问题，她把 ProcessHollowing 和 ProcessGhosting 两个技术稍微结合了一下：参照 ProcessHollowing 技术先创建一个正常程序的挂起进程，然后使用 ProcessGhosting 里的方式制作一个无文件的 section，map 到目标进程中，再更新 PEB 后恢复线程即可。
